@@ -1,0 +1,158 @@
+openapi: 3.1.0
+info:
+  title: esm2-protein-search API
+  version: 0.1.0
+  description: >
+    Remote-homology protein search over Swiss-Prot using ESM-2 embeddings.
+    FROZEN as of Phase 0. WS-C implements it; the web UI and eval harness
+    consume it. Additive changes only before v1.0.
+servers:
+  - url: https://api.esm2-search.dev/v1
+  - url: http://localhost:8080/v1
+
+paths:
+  /health:
+    get:
+      summary: Liveness and readiness
+      responses:
+        "200":
+          description: Service is ready to serve queries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, model_id, corpus, n_proteins, index_kind]
+                properties:
+                  status:      { type: string, enum: [ok, degraded] }
+                  model_id:    { type: string, example: esm2_t33_650M_UR50D }
+                  corpus:      { type: string, example: swissprot }
+                  n_proteins:  { type: integer, example: 571282 }
+                  index_kind:  { type: string, enum: [brute_force, hnsw] }
+                  version:     { type: string, example: 0.1.0 }
+        "503":
+          description: Index not yet loaded
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /search:
+    post:
+      summary: Find proteins with similar embeddings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sequence]
+              properties:
+                sequence:
+                  type: string
+                  description: >
+                    Amino acid sequence, single letter code. Plain or FASTA
+                    (a leading ">" header line is stripped). Whitespace is
+                    ignored. Case insensitive. Sequences longer than 1022
+                    residues are truncated and truncated=true is returned.
+                  minLength: 10
+                  maxLength: 10000
+                  example: MKTAYIAKQRQISFVKSHFSRQ
+                k:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 10
+                min_score:
+                  type: number
+                  minimum: -1
+                  maximum: 1
+                  default: 0
+      responses:
+        "200":
+          description: Ranked hits, descending by score
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [query, hits, took_ms]
+                properties:
+                  query:
+                    type: object
+                    required: [length, truncated, model_id]
+                    properties:
+                      length:    { type: integer }
+                      truncated: { type: boolean }
+                      model_id:  { type: string }
+                  hits:
+                    type: array
+                    items: { $ref: "#/components/schemas/Hit" }
+                  took_ms:
+                    type: object
+                    required: [embed, search, total]
+                    properties:
+                      embed:  { type: number }
+                      search: { type: number }
+                      total:  { type: number }
+        "400":
+          description: Invalid sequence (bad residue characters, too short)
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+  /proteins/{accession}:
+    get:
+      summary: Metadata for a single protein
+      parameters:
+        - name: accession
+          in: path
+          required: true
+          schema: { type: string, pattern: "^[A-Z0-9]{6,10}$" }
+      responses:
+        "200":
+          description: Protein metadata
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Protein" }
+        "404":
+          description: Not in this corpus
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+
+components:
+  schemas:
+    Hit:
+      type: object
+      required: [accession, score, rank, name, organism, length]
+      properties:
+        accession:  { type: string, example: P00761 }
+        score:      { type: number, example: 0.9421 }
+        rank:       { type: integer, example: 1 }
+        name:       { type: string, example: Trypsin }
+        organism:   { type: string, example: Sus scrofa }
+        length:     { type: integer, example: 231 }
+        ec_numbers: { type: array, items: { type: string } }
+        go_terms:   { type: array, items: { type: string } }
+
+    Protein:
+      allOf:
+        - $ref: "#/components/schemas/Hit"
+        - type: object
+          properties:
+            pfam: { type: array, items: { type: string } }
+
+    # RFC 9457 problem details. Every non-2xx response uses this shape.
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:      { type: string, example: "about:blank" }
+        title:     { type: string, example: "Invalid sequence" }
+        status:    { type: integer, example: 400 }
+        detail:    { type: string, example: "Character 'Z' at position 14 is not a standard residue" }
+        instance:  { type: string, example: "/v1/search" }
+        request_id: { type: string, example: "01J9X2K4Q7" }

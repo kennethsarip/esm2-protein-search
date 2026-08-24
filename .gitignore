@@ -1,0 +1,47 @@
+# data artifacts, never committed
+data/
+eval/data/
+*.npy
+*.parquet
+*.onnx
+*.fasta
+*.fasta.gz
+*.h5
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# rust
+target/
+**/*.rs.bk
+
+# terraform
+.terraform/
+.terraform.lock.hcl.bak
+*.tfstate
+*.tfstate.*
+*.tfvars
+!example.tfvars
+crash.log
+
+# node
+node_modules/
+dist/
+.vite/
+
+# secrets and env
+.env
+.env.*
+!.env.example
+*.pem
+credentials
+
+# os and editor
+.DS_Store
+.idea/
+*.swp

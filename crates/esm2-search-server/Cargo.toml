@@ -1,0 +1,19 @@
+[package]
+name = "esm2-search-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "HTTP search service for protein embedding similarity search"
+
+[dependencies]
+esm2-search-index = { path = "../esm2-search-index" }
+anyhow.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+axum = "0.7"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+tower-http = { version = "0.6", features = ["trace", "timeout", "cors", "limit"] }
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }

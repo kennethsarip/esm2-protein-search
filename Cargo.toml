@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = ["crates/esm2-search-index", "crates/esm2-search-server"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.92"
+license = "MIT"
+repository = "https://github.com/kennethsarip/esm2-protein-search"
+
+[workspace.dependencies]
+thiserror = "2"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+# Benchmarks are meaningless against a debug build. Use this for local
+# profiling runs that still need symbols.
+[profile.profiling]
+inherits = "release"
+debug = true
