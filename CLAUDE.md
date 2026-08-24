@@ -595,17 +595,17 @@ resolves it, not the one that discovers it.
 | R6 | Fargate task cannot hold index + ONNX model in memory | **M** | M | WS-B | int8 quantization in B3; mmap the graph; size the task from real RSS |
 | R7 | Self-implemented HNSW takes far longer than budgeted | **M** | M | WS-B | Hard decision point, see Q1. Wrap `hnsw_rs` and move on. |
 | R8 | Embeddings do not beat MMseqs2 on the benchmark | M | M | WS-D | Report honestly. A clean negative result is still a real result, and is stated as acceptable in section 1. |
-| R9 | SCOPe domains do not map cleanly onto Swiss-Prot entries | **H** | **H** | WS-D | See Q2. This is the largest open methodological hole in the project. |
+| R9 | SCOPe domains do not map cleanly onto Swiss-Prot entries | L | **H** | WS-D | Largely closed by Q2 (a): SCOPe is its own corpus, so no domain-to-parent mapping happens and the hole this described cannot open. Residual risk sits in the Pfam-clan secondary check, where multi-domain Swiss-Prot proteins do span clans; that check is reported separately and never as the headline |
 | R10 | Spot interruption mid-embed loses hours of GPU work | M | L | WS-A | Shard checkpointing; resume skips completed shards |
 | R11 | Budget overrun | L | **H** | WS-D | Section 6.4 guardrails |
 | R12 | Parallel workstreams drift from the frozen contracts | M | M | all | Contract conformance tests in CI; sync points |
 | R13 | Truncation at 1022 residues degrades long proteins | **H** | L | WS-A | Measured, not fixed: report the affected fraction and their recall separately |
 | R14 | UniProt release changes mid-project; artifacts not comparable | L | M | WS-A | Release string pinned in the manifest; never mix releases in one benchmark |
 
-R1, R2, and R9 are the ones to actually worry about. R1 and R2 are silent
-correctness failures that present as mediocre quality rather than as bugs, which
-means they can survive to the end of the project and invalidate the benchmark.
-R9 is a design hole that could invalidate the benchmark's premise.
+R1 and R2 are the ones to actually worry about. Both are silent correctness
+failures that present as mediocre quality rather than as bugs, which means they
+can survive to the end of the project and invalidate the benchmark. R9 was the
+third, and Q2 (a) closed it by removing the domain-to-parent mapping entirely.
 
 ### 7.2 Open questions
 
@@ -618,18 +618,6 @@ Implementing it is the stronger portfolio signal and is what an interviewer will
 actually probe. Wrapping is faster and lower risk. Decide by: end of B2 week 1.
 Owner: WS-B. Default: implement, but hard-stop and wrap `hnsw_rs` if recall@10
 against synthetic ground truth is not above 0.95 after five working days.
-
-**Q2. What is the benchmark corpus, exactly?**
-SCOPe domains are structural domains extracted from PDB entries. They are not
-full-length Swiss-Prot proteins. Three options: (a) embed SCOPe ASTRAL sequences
-as their own separate corpus and benchmark within it, (b) map SCOPe domains to
-their parent Swiss-Prot entries and accept the resulting noise, (c) use a
-different remote-homology benchmark such as Pfam clan membership over Swiss-Prot
-directly. Option (a) is cleanest methodologically and keeps the benchmark
-self-contained; option (c) reuses the corpus we already embedded.
-**This blocks D5 and must be settled before any evaluation code is written.**
-Decide by: start of D5. Owner: WS-D. Default: (a), a separate SCOPe corpus,
-with Pfam-over-Swiss-Prot as a secondary check.
 
 **Q3. Scalar int8 quantization or product quantization?**
 Decide by: end of B3. Owner: WS-B. Default: scalar int8. Only escalate to PQ if
@@ -673,6 +661,7 @@ a short document, and it stops the same debate from recurring in a later session
 | 2026-08-24 | Frontend scope | Minimal single-page demo | A clickable link matters; a full dashboard competes with the engineering |
 | 2026-08-24 | Q8, AWS region | us-west-2 | The Open Data genomics tiebreaker in the original question does not apply: every corpus we consume (UniProt, SCOPe, ESM-2 weights) comes from its own host, not an AWS Open Data bucket, so there is no cross-region transfer to match. Decided instead on g5 spot availability for D4 and proximity to Berkeley for demo latency |
 | 2026-08-24 | Terraform state locking | S3 native `use_lockfile`, no DynamoDB table | Terraform 1.15 deprecates the S3 backend's `dynamodb_table`; native locking removes a resource, an IAM permission, a teardown step, and a cost line |
+| 2026-08-24 | Q2, benchmark corpus | (a) SCOPe ASTRAL 40 as its own corpus, queried against itself. Pfam clans over Swiss-Prot as the secondary check | Option (b) is the thing that made R9 High/High: a SCOPe domain is a fragment, and a multi-domain parent protein spans several superfamilies, so domain-to-parent mapping makes the positive label itself wrong rather than merely noisy. (a) removes the mapping step entirely and matches how the remote-homology literature evaluates, which keeps our numbers comparable to published ones. The cost is that (a) does not exercise the deployed Swiss-Prot index; (c) covers that as a secondary check |
 
 ---
 

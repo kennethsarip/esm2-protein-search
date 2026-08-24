@@ -59,6 +59,20 @@ _No entries yet. First entry expected at C1 completion._
   trusts this issuer via its own trust store, and a pinned thumbprint breaks
   on GitHub's next cert rotation. Revisit only if `AssumeRoleWithWebIdentity`
   starts failing on trust, not on the role policy.
+- [DECISION] 2026-08-24 - Q2 closed, benchmark corpus is SCOPe ASTRAL 40 as its
+  own self-contained corpus; a positive is same superfamily and different
+  family, same-family candidates are dropped from the pool. Pfam clans over
+  Swiss-Prot as the secondary check. `eval/PROTOCOL.md`.
+- [RISK] 2026-08-24 - R9 downgraded from H/H to L/H by that decision. No SCOPe
+  domain to Swiss-Prot mapping happens any more, so the hole it described
+  cannot open. Residual risk lives only in the Pfam secondary check.
+- [WS-D / D5] 2026-08-24 - Protocol fixed in writing before any results exist,
+  per D5 task 5, headline metric pre-registered as recall@10. Metrics built
+  test-first: 7/7 pass on hand-computed values, recall@1 = 1/3 and AP = 0.7556
+  on a 5-item toy ranking. `eval/`
+- [RISK] 2026-08-24 - Cross-stream dependency not in the CLAUDE.md 5.1 table:
+  D5's esm2 arm needs SCOPe embeddings and so waits on WS-A's embed pipeline.
+  The BLAST and MMseqs2 arms and all scoring are unblocked and proceed now.
 
 ## Cost tracking
 
