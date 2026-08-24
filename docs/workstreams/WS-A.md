@@ -34,6 +34,27 @@ match the contract schema, with a printed summary of counts dropped per rule.
 
 1. Load `esm2_t33_650M_UR50D`, `torch.float16`, `device="mps"`, `model.eval()`,
    inside `torch.inference_mode()`.
+
+   Loading it will fail before it does anything else. `fair-esm` was last
+   released in November 2022 and every `torch.load` in `esm/pretrained.py`
+   omits `weights_only`, which torch 2.6 flipped to default `True`. The ESM-2
+   checkpoints carry an `argparse.Namespace` in `model_data["args"]`, and
+   `weights_only=True` refuses to unpickle it, so you get
+   `UnpicklingError: Weights only load failed ... GLOBAL argparse.Namespace was
+   not an allowed global by default`. It reads like a corrupted download; it is
+   not. Allowlist the global once, at import time in `embed.py`:
+
+   ```python
+   import argparse
+   import torch
+
+   # fair-esm 2.0.0 predates the torch 2.6 weights_only default. ESM-2
+   # checkpoints store their config as an argparse.Namespace.
+   torch.serialization.add_safe_globals([argparse.Namespace])
+   ```
+
+   Pinning `torch<2.6` also works and is the wrong trade: it holds the pipeline
+   on a 2024 release, and A3's ONNX export is better supported on current torch.
 2. Implement length bucketing in `bucket.py`: sort by length, form batches with
    a token budget (start at 16,384 tokens per batch) rather than a fixed count.
    Attention is O(L^2); a fixed batch size will either OOM on long proteins or
