@@ -23,7 +23,9 @@ Prefixes: `[WS-X / PhaseId]`, `[SYNC]`, `[DECISION]`, `[RISK]`, `[COST]`.
   RED output required in every PR description. Characterization tests, not TDD,
   for model-output quality; benchmarks, not assertions, for latency.
 - [DECISION] 2026-08-24 - Per-phase task detail moved to `docs/workstreams/WS-*.md`
-  to keep CLAUDE.md under the 900-line ceiling from section 8.5. CLAUDE.md 717 lines.
+  to keep CLAUDE.md under the 900-line ceiling from section 8.5. CLAUDE.md 881 lines.
+- [DECISION] 2026-08-24 - Completed phases are retired from CLAUDE.md 5.3 and from
+  the workstream file by `scripts/phase_done.py`, summarized here instead. See 9.5.
 
 ## WS-A: Data and embedding
 

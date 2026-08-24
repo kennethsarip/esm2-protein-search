@@ -401,11 +401,13 @@ contract in a PR rather than working around it.
 ### 5.2 Running the four sessions
 
 ```bash
-git worktree add ../esm2-search-a ws-a/main
-git worktree add ../esm2-search-b ws-b/main
-git worktree add ../esm2-search-c ws-c/main
-git worktree add ../esm2-search-d ws-d/main
+for w in a b c d; do
+  git worktree add -b ws-$w/main ../esm2-search-$w main
+done
 ```
+
+The `-b` is required: these branches do not exist yet, and without it git
+rejects `ws-a/main` as an invalid reference.
 
 Open a terminal per worktree and start a Claude Code session in each with:
 "Read CLAUDE.md, docs/workstreams/WS-A.md, and MEMORY.md. You own WS-A. Start at
@@ -424,6 +426,13 @@ Rules for parallel sessions:
 - If you need something from another stream that does not exist yet, write the
   stub yourself against the contract, in your own directory. Do not reach into
   their tree.
+- Crate-specific Rust dependencies go in that crate's own `Cargo.toml`, never in
+  the root `[workspace.dependencies]` table. WS-B and WS-C both add dependencies
+  and appending to the same table conflicts on every merge. Only genuinely
+  shared deps live at the root, and adding one is called out in the PR.
+- `Cargo.lock` will conflict whenever two streams add dependencies. It is
+  generated, so do not hand-merge it: `git checkout --ours Cargo.lock`, then
+  `cargo check --workspace`, then commit the regenerated lock.
 - `data/` is per-worktree and gitignored. Each session embeds its own dev
   subset, or symlink one shared copy: `ln -s ~/esm2-search-data data`.
 
@@ -700,8 +709,9 @@ not worked around.
 
 ### 8.3 What triggers an update
 
-- A phase completes. Mark it, log it per section 9, and check that the phases
-  after it still describe the work that actually remains.
+- A phase completes. Run `scripts/phase_done.py`, per section 9.5. It retires the
+  phase from 5.3 and from your workstream file and writes the MEMORY.md entry.
+  Then check that the phases after it still describe the work that remains.
 - An open question in 7.2 is decided. Move it to 7.3 with the reasoning.
 - A new risk becomes apparent. Add it to 7.1. Do not wait for it to materialize.
 - A measured number arrives (throughput, recall, memory, cost). Estimates in
@@ -796,6 +806,40 @@ MEMORY.md records what happened. CLAUDE.md describes what to do. They are not
 interchangeable and neither replaces the other. Do not put plans in MEMORY.md,
 and do not put a running history in CLAUDE.md beyond the closed-questions table
 in 7.3.
+
+### 9.5 Retiring a completed phase
+
+The moment a phase is done, before you open the PR, run:
+
+```bash
+scripts/phase_done.py B1 "brute force exact index lands, recall@10 1.0 vs the
+  numpy oracle on the 10k dev subset, 41 ms p95. crates/esm2-search-index/src/brute.rs"
+```
+
+This is not optional and it is not a cleanup pass. Planning text that describes
+work already finished is the specific failure mode section 8.1 exists to
+prevent: three other sessions read this document and will act on it.
+
+The script makes three edits:
+
+1. Collapses the phase's row in 5.3 to `done, see MEMORY.md`. The identifier and
+   the "unblocks" column survive deliberately, because the dependency table in
+   5.1 and consistency check 8.4 #1 resolve against them. A phase row deleted
+   outright turns "B1 unblocks C3" into a dangling reference in a terminal that
+   is not yours.
+2. Deletes the phase's task detail from `docs/workstreams/WS-<X>.md`, leaving a
+   pointer. That block is the real token cost, and it is dead weight once the
+   work exists in git.
+3. Appends the summary to your own section of MEMORY.md in the 9.2 format.
+
+It refuses a summary with no number in it, for the reason given in 9.2, and
+refuses to retire a phase twice. What it cannot do is judge: moving a decided
+question from 7.2 to 7.3, striking a superseded estimate, and updating the risk
+register in 7.1 are still yours, and the script prints that reminder.
+
+MEMORY.md is the reference for anything retired this way. It is append-only and
+never pruned; CLAUDE.md is what shrinks.
+
 
 ---
 
