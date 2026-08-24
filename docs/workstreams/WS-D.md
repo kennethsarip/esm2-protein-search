@@ -16,13 +16,14 @@ Owns `infra/`, `eval/`, `.github/workflows/`. Budget ceiling: 50 USD total.
    job that retries in a loop can spend the entire budget in an afternoon.
 2. IAM: an admin user for yourself with MFA, an OIDC role for GitHub Actions.
    Never long-lived access keys in CI. Never the root account for daily work.
-3. Terraform remote state: S3 bucket with versioning and encryption, plus
-   DynamoDB state locking. Bootstrap this by hand or in a separate root module;
-   it is the one chicken-and-egg case.
-4. Pin the AWS provider version. Pin Terraform. Commit `.terraform.lock.hcl`.
-5. Single region, `us-east-1` or `us-west-2`. Check which one hosts the AWS Open
-   Data genomics buckets you might use later and match it; cross-region S3
-   transfer is a silent cost.
+3. Terraform remote state: S3 bucket with versioning and encryption, locking
+   natively via `use_lockfile`. No DynamoDB table: Terraform 1.15 deprecates
+   the S3 backend's `dynamodb_table` parameter. Bootstrap this by hand or in a
+   separate root module; it is the one chicken-and-egg case.
+4. Pin the AWS provider version. Pin Terraform. Commit `.terraform.lock.hcl`,
+   locked for `darwin_arm64` (local) and `linux_amd64` (CI) both, or CI fails
+   on a checksum the local lock never recorded.
+5. Single region: `us-west-2`, decided, see CLAUDE.md 7.3.
 6. Write `docs/aws_teardown.md`: the exact commands to destroy everything.
    Write it now, while the infrastructure is small enough to enumerate.
 

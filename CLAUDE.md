@@ -509,7 +509,7 @@ calculator before provisioning anything; do not treat these numbers as current.
 | S3 storage | ~0.023 USD/GB/mo | ~8 GB (embeddings, index, ONNX) | under 1 USD | Negligible. Lifecycle-expire old versions. |
 | ECR | ~0.10 USD/GB/mo | ~1 GB of images | under 1 USD | Lifecycle policy keeps last 5 |
 | CloudWatch Logs | ~0.50 USD/GB ingested | low traffic, 7-day retention | 1-2 USD | A debug log loop can spike this. See 6.4. |
-| DynamoDB (TF lock) | on-demand | a few hundred ops | under 1 USD | |
+| ~~DynamoDB (TF lock)~~ | ~~on-demand~~ | none | 0 USD | Struck: Terraform 1.15 deprecates `dynamodb_table`; state locks natively in S3 via `use_lockfile`. No table exists. |
 | Data transfer out | first 100 GB/mo free | demo traffic | 0 USD | |
 | ACM certificate | free | 1 cert | 0 USD | |
 | NAT Gateway | ~0.045 USD/hr + per-GB | **none** | 0 USD | ~32 USD/mo if provisioned. See 6.2. |
@@ -654,11 +654,6 @@ A published crate is a materially stronger artifact than a directory in a
 monorepo, but it implies some ongoing maintenance. Decide by: B5.
 Owner: WS-B. Default: publish.
 
-**Q8. Which AWS region?**
-Match whichever hosts the Open Data genomics buckets you may want later;
-cross-region S3 transfer is a silent cost. Decide by: D1. Owner: WS-D.
-Default: us-west-2.
-
 **Q9. Does search need metadata filtering (by organism, EC class, length)?**
 Real users want it. It complicates the index and the API. Decide by: end of C3.
 Owner: WS-C. Default: no filtering in MVP; it is listed in section 11 non-goals
@@ -676,6 +671,8 @@ a short document, and it stops the same debate from recurring in a later session
 | 2026-08-24 | Serving platform | ECS Fargate, not Lambda | Index must stay resident; Lambda cold starts would reload it |
 | 2026-08-24 | IaC tool | Terraform, not CDK | Portable skill, transfers beyond AWS |
 | 2026-08-24 | Frontend scope | Minimal single-page demo | A clickable link matters; a full dashboard competes with the engineering |
+| 2026-08-24 | Q8, AWS region | us-west-2 | The Open Data genomics tiebreaker in the original question does not apply: every corpus we consume (UniProt, SCOPe, ESM-2 weights) comes from its own host, not an AWS Open Data bucket, so there is no cross-region transfer to match. Decided instead on g5 spot availability for D4 and proximity to Berkeley for demo latency |
+| 2026-08-24 | Terraform state locking | S3 native `use_lockfile`, no DynamoDB table | Terraform 1.15 deprecates the S3 backend's `dynamodb_table`; native locking removes a resource, an IAM permission, a teardown step, and a cost line |
 
 ---
 
