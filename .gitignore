@@ -1,5 +1,7 @@
-# data artifacts, never committed
-data/
+# data artifacts, never committed. No trailing slash: CLAUDE.md 5.2 suggests
+# symlinking data/ to one shared copy, and git treats a symlink as a file, so
+# a "data/" pattern would not ignore it.
+/data
 eval/data/
 *.npy
 *.parquet
