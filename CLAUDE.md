@@ -460,7 +460,7 @@ Runs on the M3 Pro.
 
 | Phase | Deliverable | Unblocks |
 |---|---|---|
-| B1 | Crate skeleton, `.npy` loader, brute-force exact index | **C3, critical path** |
+| B1 | done, see MEMORY.md | **C3, critical path** |
 | B2 | HNSW construction, versioned serialization, mmap load | B3 |
 | B3 | int8 quantization, memory-versus-recall table | B4 |
 | B4 | Recall and latency benchmarks, the recall-versus-latency curve | D7 |

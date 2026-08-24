@@ -8,23 +8,7 @@ CLAUDE.md section 8.5. Read CLAUDE.md first, then this file. Sections 1-4 and
 
 Owns `crates/esm2-search-index/`. Publishable crate, zero HTTP, zero AWS.
 
-**Phase B1: Crate skeleton and brute-force index** (critical path, do first)
-
-1. Cargo workspace member, the exact public API from `contracts/index-api.md`.
-   Types and signatures first, `todo!()` bodies, so it compiles immediately.
-2. `.npy` reader for float32 2-D C-contiguous arrays. Parse the header, validate
-   dtype, shape, and fortran_order. Reject anything else with `Corrupt`.
-   Do not pull in a heavyweight dependency for this; the format is 60 lines.
-3. Load `ids.json`, `meta.parquet` (via `arrow`/`parquet` crates), and
-   `manifest.json`. Assert row-count agreement across all four. Assert unit
-   norms within 1e-4. Fail loudly on mismatch.
-4. `BruteForceIndex`: full scan, dot product, top-k via a bounded binary heap.
-   Parallelize across rows with `rayon`.
-5. Publish it. **This is what unblocks WS-C**, so land it before anything else.
-6. Tests (written first, per CLAUDE.md 4.6): load the dev subset, assert `len()`, assert self-query returns the
-   query itself at rank 1 with score 1.0.
-
-Done when: WS-C can add the crate as a dependency and get real search results.
+**Phase B1** - done, see MEMORY.md.
 
 **Phase B2: HNSW**
 

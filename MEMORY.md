@@ -33,7 +33,10 @@ _No entries yet. First entry expected at A1 completion._
 
 ## WS-B: Index core
 
-_No entries yet. First entry expected at B1 completion. B1 is the critical path._
+- [WS-B / B1] 2026-08-24 - 17/17 tests pass across npy parsing, corpus
+  validation, and brute-force top-k. Self-query returns rank 1 at score 1.0 (tol
+  1e-4) on a synthetic 50-row corpus; real dev10k pending WS-A.
+  crates/esm2-search-index/src/{npy,corpus,brute}.rs
 
 ## WS-C: Search service
 
