@@ -74,6 +74,23 @@ _No entries yet. First entry expected at C1 completion._
   D5's esm2 arm needs SCOPe embeddings and so waits on WS-A's embed pipeline.
   The BLAST and MMseqs2 arms and all scoring are unblocked and proceed now.
 
+- [WS-D / D5] 2026-08-25 - SCOPe 2.08 ASTRAL-40 pinned and loaded: 15177
+  domains, 13275 queryable, 2065 superfamilies, 4703 families, median 23
+  positives per query, max 371. sha256 e6d3213b. Scoring the full protocol is
+  13275 x 15177 = 201M pairs per method, which sizes the runners.
+  `eval/src/esm2_search_eval/{scope,corpus}.py`
+- [WS-D / D5] 2026-08-25 - ASTRAL ships entirely lowercase. The loader
+  uppercases every sequence: BLAST treats lowercase as soft-masked, so passing
+  it through would have handed BLAST a masked database while the other methods
+  saw the real one, violating PROTOCOL.md section 5.
+- [RISK] 2026-08-25 - R13 measured on the benchmark corpus: 11 of 15177 SCOPe
+  domains (0.07%) exceed 1022 residues, so truncation is negligible here. This
+  says nothing about Swiss-Prot; WS-A still measures that separately.
+- [WS-D / D5] 2026-08-25 - 1909 of 13275 queries have more than 100 positives,
+  so recall@100 is capped below 1.0 for 14% of the query set. Anticipated by
+  PROTOCOL.md section 4 and identical for every method; noted so a reader of
+  the D7 table does not read the ceiling as a method failure.
+
 ## Cost tracking
 
 Log the Cost Explorer running total at every sync point. CLAUDE.md section 6.4.
