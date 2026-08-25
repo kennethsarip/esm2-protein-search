@@ -62,10 +62,12 @@ KTAYIA
 def test_parse_astral_fasta_reads_sid_sccs_and_sequence() -> None:
     """The first record's sequence spans two lines and must join to one string.
 
-    The lowercase `l` is uppercased deliberately. BLAST treats lowercase as
-    soft-masked and can drop those residues from seeding, so leaving ASTRAL's
-    case as-is would hand BLAST a different corpus from the one every other
-    method sees, which PROTOCOL.md section 5 forbids.
+    The lowercase `l` is uppercased deliberately. blastp does not mask
+    lowercase by default, measured on 2.17.0+, so this is not fixing a live
+    bug. It is normalisation: under `-lcase_masking` a fully lowercase corpus
+    scores zero hits, and uppercasing at load makes it impossible for any
+    runner to trip that flag into the silent corpus difference PROTOCOL.md
+    section 5 forbids.
     """
     domains = parse_astral_fasta(ASTRAL_FASTA)
     assert len(domains) == 2

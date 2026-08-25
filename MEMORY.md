@@ -80,9 +80,13 @@ _No entries yet. First entry expected at C1 completion._
   13275 x 15177 = 201M pairs per method, which sizes the runners.
   `eval/src/esm2_search_eval/{scope,corpus}.py`
 - [WS-D / D5] 2026-08-25 - ASTRAL ships entirely lowercase. The loader
-  uppercases every sequence: BLAST treats lowercase as soft-masked, so passing
-  it through would have handed BLAST a masked database while the other methods
-  saw the real one, violating PROTOCOL.md section 5.
+  uppercases every sequence. Correcting this entry as first written: blastp
+  2.17.0+ does NOT mask lowercase by default. Measured, identical bitscores
+  from a lowercase and an uppercase database (231, 87.8, 67.8, 56.2, 43.5).
+  Masking happens only under `-lcase_masking`, where the same query returns 0
+  hits instead of 5. Uppercasing is kept as a cheap guarantee that no runner
+  can trip that flag into a silent corpus difference, not as a fix for a
+  default-behaviour bug that does not exist.
 - [RISK] 2026-08-25 - R13 measured on the benchmark corpus: 11 of 15177 SCOPe
   domains (0.07%) exceed 1022 residues, so truncation is negligible here. This
   says nothing about Swiss-Prot; WS-A still measures that separately.
