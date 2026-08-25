@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -109,3 +110,8 @@ def query_set(corpus: Sequence[Domain]) -> list[Domain]:
     for d in corpus:
         families_by_superfamily[d.sccs.superfamily].add(d.sccs.family)
     return [d for d in corpus if len(families_by_superfamily[d.sccs.superfamily]) > 1]
+
+
+def write_fasta(domains: Sequence[Domain], path: Path) -> None:
+    """Write domains as FASTA for the alignment tools to index."""
+    path.write_text("".join(f">{d.sid} {d.sccs.family}\n{d.sequence}\n" for d in domains))

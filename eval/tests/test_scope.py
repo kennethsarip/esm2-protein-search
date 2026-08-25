@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from esm2_search_eval.scope import (
@@ -12,6 +14,7 @@ from esm2_search_eval.scope import (
     parse_sccs,
     positives,
     query_set,
+    write_fasta,
 )
 
 
@@ -149,3 +152,20 @@ def test_query_set_drops_domains_that_have_no_possible_positive() -> None:
     constant and read as a quality difference between methods that is not one.
     """
     assert [d.sid for d in query_set(CORPUS)] == ["Q", "SAME_FAMILY", "POS_1", "POS_2"]
+
+
+def test_write_fasta_round_trips_through_our_own_parser(tmp_path: Path) -> None:
+    """The written corpus must reload identical, sid, sccs, and sequence alike.
+
+    This file is what `makeblastdb` and `mmseqs createdb` consume, so it is
+    the corpus in the sense PROTOCOL.md section 5 means when it requires every
+    method to see the same one. Keeping the sccs in the header makes the file
+    self-describing: a results table can be rescored from the FASTA alone,
+    without trusting that some separate id-to-class mapping stayed in sync.
+    """
+    original = [Q, POS_1]
+    path = tmp_path / "corpus.fa"
+    write_fasta(original, path)
+
+    assert path.read_text().startswith(">Q a.1.1.1\nMKTAYIA\n")
+    assert parse_astral_fasta(path.read_text()) == original

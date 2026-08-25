@@ -95,6 +95,13 @@ _No entries yet. First entry expected at C1 completion._
   PROTOCOL.md section 4 and identical for every method; noted so a reader of
   the D7 table does not read the ceiling as a method failure.
 
+- [WS-D / D5] 2026-08-25 - Task 2 done. BLAST and MMseqs2 databases built from
+  one normalised FASTA, not the download: both report 15177 sequences and
+  2805012 residues, longest 1664. Self-query returns self at rank 1 in both
+  (blastp bits 231/256/259, mmseqs 223/251/261). blastp 2.17.0+, MMseqs2
+  18-8cc5c. 2.5 s to build, 8.6 MB on disk.
+  `eval/src/esm2_search_eval/databases.py`
+
 ## Cost tracking
 
 Log the Cost Explorer running total at every sync point. CLAUDE.md section 6.4.
